@@ -68,7 +68,11 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
-    media: Media;
+    tenants: Tenant;
+    events: Event;
+    bookings: Booking;
+    notifications: Notification;
+    'booking-logs': BookingLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -76,7 +80,11 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    'booking-logs': BookingLogsSelect<false> | BookingLogsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -119,6 +127,9 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  name: string;
+  role: 'attendee' | 'organizer' | 'admin';
+  tenant: number | Tenant;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -139,22 +150,84 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "tenants".
  */
-export interface Media {
+export interface Tenant {
   id: number;
-  alt: string;
+  name: string;
   updatedAt: string;
   createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  date: string;
+  capacity: number;
+  organizer: number | User;
+  tenant: number | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  event: number | Event;
+  user: number | User;
+  status: 'confirmed' | 'waitlisted' | 'canceled';
+  tenant: number | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: number;
+  user: number | User;
+  type: 'booking_confirmed' | 'waitlisted' | 'waitlist_promoted' | 'booking_canceled';
+  title: string;
+  message?: string | null;
+  read?: boolean | null;
+  tenant: number | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking-logs".
+ */
+export interface BookingLog {
+  id: number;
+  event: number | Event;
+  user: number | User;
+  action: 'create_request' | 'waitlisted' | 'confirmed' | 'promote_from_waitlist' | 'cancel_confirmed';
+  note?: string | null;
+  tenant: number | Tenant;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -168,8 +241,24 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'notifications';
+        value: number | Notification;
+      } | null)
+    | ({
+        relationTo: 'booking-logs';
+        value: number | BookingLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -218,6 +307,10 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  password?: T;
+  role?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -237,21 +330,65 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "tenants_select".
  */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
+export interface TenantsSelect<T extends boolean = true> {
+  name?: T;
   updatedAt?: T;
   createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  date?: T;
+  capacity?: T;
+  organizer?: T;
+  tenant?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  event?: T;
+  user?: T;
+  status?: T;
+  tenant?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  user?: T;
+  type?: T;
+  title?: T;
+  message?: T;
+  read?: T;
+  tenant?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking-logs_select".
+ */
+export interface BookingLogsSelect<T extends boolean = true> {
+  event?: T;
+  user?: T;
+  action?: T;
+  note?: T;
+  tenant?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
