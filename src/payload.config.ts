@@ -54,7 +54,7 @@ export default buildConfig({
       path: '/book-event',
       method: 'post',
       handler: async (req) => {
-        const data = await req.json()
+        const data = await req.json?.()
         // const user = req.user || { id: 1, tenant: 1, role: 'admin' }
         console.log("req", req)
         const user = req.user
@@ -122,7 +122,7 @@ export default buildConfig({
       method: 'post',
       handler: async (req) => {
         try {
-          const data = await req.json()
+          const data = await req.json?.()
           const user = req.user
           if (!user) throw new Error('Unauthorized')
     
