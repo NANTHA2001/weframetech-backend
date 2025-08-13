@@ -12,7 +12,7 @@ export const tenantWhere = (req: PayloadRequest): Where => {
   
   // Quick guard
   import type { Request } from 'express';
-  import type { User } from '../models/user';
+  import type { User } from '../models/model';
   
   type RequireUserFn = (req: Request) => asserts req is Request & { user: User };
   
