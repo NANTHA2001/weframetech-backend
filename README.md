@@ -1,67 +1,158 @@
-# Payload Blank Template
+# Booking Management System
 
-This template comes configured with the bare minimum to get started on anything you need.
+A PayloadCMS-based booking management system with automatic waitlist promotion, notifications, and logs.
 
-## Quick start
+---
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+## Table of Contents
+1. [Setup Instructions](#setup-instructions)  
+2. [Architecture](#architecture)  
+3. [Sample Workflows](#sample-workflows)  
+4. [Demo Credentials](#demo-credentials)  
+5. [Deployment Guide](#deployment-guide)  
 
-## Quick Start - local setup
+---
 
-To spin up this template locally, follow these steps:
+## Setup Instructions
 
-### Clone
+Follow these steps to get the project running locally:
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+1. **Clone the repository**
+```bash
+git clone https://github.com/NANTHA2001/weframetech-backend.git
+cd weframetech-backend
 
-### Development
+2. **Install dependencies**
+    npm install
+    # or
+    yarn install
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URI` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+3. Setup environment variables
+Create a .env file at the root with:
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+  DATABASE_URL=""
+  PAYLOAD_SECRET=""
+  PAYLOAD_PUBLIC_SERVER_URL=""
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+  
+### Setting up Neon PostgreSQL Database
 
-#### Docker (Optional)
+1. **Sign up / Log in to Neon**  
+   Go to [https://neon.tech](https://neon.tech) and create an account or log in.
 
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
+2. **Create a new project**  
+   - Click **New Project**.  
+   - Enter a project name (e.g., `booking-system`).  
+   - Choose a region closest to your server.
 
-To do so, follow these steps:
+3. **Create a database branch**  
+   - Click **Create Branch** (usually `main`).  
+   - This will automatically provision a PostgreSQL database.
 
-- Modify the `MONGODB_URI` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URI` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+4. **Get the connection string**  
+   - Go to **Settings → Connection Strings**.  
+   - Copy the `PostgreSQL URI` (it looks like `postgres://<username>:<password>@<host>:<port>/<database>`).
 
-## How it works
+5. **Add the connection string to your project**  
+   - Create a `.env` file in the project root if it doesn’t exist.  
+   - Add the following:
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+```ini
+DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database>
+PAYLOAD_SECRET=<your-secret-key>
+PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3000
 
-### Collections
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+4. Architecture
 
-- #### Users (Authentication)
+src/
+│
+├─ payload.config.ts 
+│
+├─ access/ 
+│ ├─ roles.ts 
+│ └─ tenant.ts 
+│
+├─ collections/ 
+│ ├─ Tenants.ts
+│ ├─ Users.ts
+│ ├─ Events.ts
+│ ├─ Bookings.ts
+│ ├─ Notifications.ts
+│ └─ BookingLogs.ts
+│
+├─ routes/ 
+│ ├─ booking.ts
+│ └─ dashboard.ts
+│
+├─ utils/
+│ ├─ notifications.ts 
+│ ├─ logs.ts 
+│ └─ promotion.ts 
+│
+└─ seed/ 
+└─ seed.ts
 
-  Users are auth-enabled collections that have access to the admin panel.
+## Logic Overview
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+- **Bookings collection:** Manages event bookings with status (`confirmed`, `waitlisted`, `canceled`).  
+- **BookingLogs collection:** Records every booking change with action and notes.  
+- **Utils:**
+  - `writeBookingLog`: Creates a log entry after each booking change.  
+  - `createNotificationForStatus`: Sends notifications to users when their booking status changes.  
+  - `promoteOldestWaitlisted`: Automatically promotes the oldest waitlisted user when a confirmed booking is canceled.  
+- **Hooks:** `beforeValidate` and `afterChange` ensure capacity checks, automatic promotion, notifications, and logs.  
 
-- #### Media
+---
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+## Sample Workflows
 
-### Docker
+### 1. Booking Creation
+1. User creates a booking.  
+2. Status is set:
+   - If event capacity is available → `confirmed`  
+   - Else → `waitlisted`  
+3. Log entry is created with action: `create_request` or `auto_waitlist`.  
 
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
+### 2. Booking Cancellation
+1. Admin cancels a confirmed booking.  
+2. Booking status is updated to `canceled`.  
+3. Oldest waitlisted booking is promoted to `confirmed`.  
+4. Logs and notifications are generated for both canceled and promoted bookings.  
 
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
+### 3. Waitlist Promotion
+1. If a spot opens up in a fully booked event:  
+   - The oldest waitlisted booking is promoted.  
+   - `_promoted` flag is set to `true`.  
+   - Notifications are sent and logs are created.  
 
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
 
-## Questions
+##Demo Credentials
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+| Role     | Email                    | Password  |
+| -------- | ------------------------ | --------- |
+| Admin    | [admin@example.com]      | Admin@123  | # use this
+| Reviewer | [reviewer@example.com]   | review123 |
+
+
+
+## Deployment Guide
+
+### Deploy to Vercel
+
+1. Push your repository to GitHub/GitLab.  
+2. Create a new Vercel project and connect your repository.  
+3. Set environment variables in Vercel:
+
+```ini
+PAYLOAD_SECRET=<your-secret-key>
+DATABASE_URL=<your-db-connection-string>
+PAYLOAD_PUBLIC_SERVER_URL=<your-deployed-url>
+
+4. Set the build command:
+  npm run build
+
+5.Set the output directory to:
+  .
+6. Start the server with:
+   npm run start
