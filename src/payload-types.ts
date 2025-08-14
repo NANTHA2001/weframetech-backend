@@ -207,6 +207,7 @@ export interface Booking {
 export interface Notification {
   id: number;
   user: number | User;
+  booking?: number | null;
   type: 'booking_confirmed' | 'waitlisted' | 'waitlist_promoted' | 'booking_canceled';
   title: string;
   message?: string | null;
@@ -221,6 +222,7 @@ export interface Notification {
  */
 export interface BookingLog {
   id: number;
+  booking?: number | null;
   event: number | Event;
   user: number | User;
   action: 'create_request' | 'waitlisted' | 'confirmed' | 'promote_from_waitlist' | 'cancel_confirmed';
@@ -368,6 +370,7 @@ export interface BookingsSelect<T extends boolean = true> {
  */
 export interface NotificationsSelect<T extends boolean = true> {
   user?: T;
+  booking?: T;
   type?: T;
   title?: T;
   message?: T;
@@ -381,6 +384,7 @@ export interface NotificationsSelect<T extends boolean = true> {
  * via the `definition` "booking-logs_select".
  */
 export interface BookingLogsSelect<T extends boolean = true> {
+  booking?: T;
   event?: T;
   user?: T;
   action?: T;

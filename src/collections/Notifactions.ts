@@ -6,7 +6,7 @@ const Notifications: CollectionConfig = {
   admin: { useAsTitle: 'title' },
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
-    // { name: 'booking', type: 'number' },
+    { name: 'booking', type: 'number' },
     { name: 'type', type: 'select', required: true,
       options: ['booking_confirmed','waitlisted','waitlist_promoted','booking_canceled'] },
     { name: 'title', type: 'text', required: true },

@@ -20,7 +20,6 @@ export async function writeBookingLog(
     throw new Error('Tenant is required to write booking log');
   }
 
-  // Determine final action
   const finalAction: BookingAction = allowedActions.includes(bookingDoc.action)
     ? bookingDoc.action
     : action
@@ -44,6 +43,7 @@ export async function writeBookingLog(
       tenant: tenantField,
       user: bookingDoc.user?.id,
       action: finalAction,
+      booking: bookingDoc.id,
     },
     overrideAccess: true,
     depth: 0,

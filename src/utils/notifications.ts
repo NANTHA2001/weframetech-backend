@@ -35,7 +35,7 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
   await req.payload.create({
     collection: 'notifications',
     data: {
-        // booking: bookingDoc.id, // <-- make sure you use doc.id directly
+        booking: bookingDoc.id, // <-- make sure you use doc.id directly
         tenant: bookingDoc.tenant?.id || bookingDoc.user?.tenant?.id,
         user: bookingDoc.user?.id,
         type: finalType,
@@ -47,7 +47,7 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
           : finalType === 'waitlisted'
             ? 'Event is full. You have been added to the waitlist.'
             : 'Your booking was canceled.',
-    },
+    } as any,
     overrideAccess: true,
     depth: 0,
   });

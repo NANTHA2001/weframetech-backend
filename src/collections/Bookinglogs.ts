@@ -5,7 +5,7 @@ const BookingLogs: CollectionConfig = {
   slug: 'booking-logs',
   admin: { useAsTitle: 'action' },
   fields: [
-    // { name: 'booking', type: 'number'},
+    { name: 'booking', type: 'number'},
     { name: 'event', type: 'relationship', relationTo: 'events' as const, required: true },
     { name: 'user', type: 'relationship', relationTo: 'users' as const, required: true },
     { name: 'action', type: 'select', required: true,

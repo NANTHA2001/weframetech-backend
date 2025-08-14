@@ -132,7 +132,7 @@ export default buildConfig({
             id: bookingId,
           })
           if (!booking) throw new Error('Booking not found')
-          // if (booking.status == "canceled") throw new Error('Already canceled')
+          if (booking.status == "canceled") throw new Error('Already canceled')
     
           // Tenant guard
           // const userTenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant
