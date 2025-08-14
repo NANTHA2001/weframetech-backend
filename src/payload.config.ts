@@ -29,7 +29,6 @@ export default buildConfig({
       views: {
         dashboard: {
           Component: './admin/pages/dashboard',
-          // exportName: 'default', // matches your default export
         },
       },
     },
@@ -54,7 +53,6 @@ export default buildConfig({
       method: 'post',
       handler: async (req) => {
         const data = await req.json?.()
-        // const user = req.user || { id: 1, tenant: 1, role: 'admin' }
         console.log("req", req)
         const user = req.user
         if (!user) throw new Error('Unauthorized')

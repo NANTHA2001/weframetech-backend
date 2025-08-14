@@ -14,7 +14,7 @@ export async function promoteOldestWaitlisted(req: PayloadRequest, eventId: stri
   const wl = await req.payload.find({
     collection: 'bookings',
     limit: 1,
-    sort: 'createdAt', // oldest first
+    sort: 'createdAt', 
     where: {
       and: [
         { event: { equals: eventIdValue } },
@@ -27,17 +27,16 @@ export async function promoteOldestWaitlisted(req: PayloadRequest, eventId: stri
   const candidate = wl.docs[0];
   if (!candidate) return null;
 
-  // Promote the booking
   const updated = await req.payload.update({
     collection: 'bookings',
     id: candidate.id,
     data: { status: 'confirmed', _promoted: true } as any, 
   });
 
-  // ✅ Add notification
+
   await createNotificationForStatus(req, updated);
 
-  // ✅ Add booking log
+
   await writeBookingLog(req, updated);
 
   console.log("promoteddd", updated);

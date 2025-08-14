@@ -1,9 +1,7 @@
 import { PayloadRequest, Where } from "payload";
 
-// Ensures all queries are scoped to the user's tenant
 export const tenantWhere = (req: PayloadRequest): Where => {
     if (!req.user?.tenant) {
-      // match nothing
       return { id: { equals: null } };
     }
     return { tenant: { equals: req.user.tenant } };

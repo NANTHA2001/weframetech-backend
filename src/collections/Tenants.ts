@@ -7,7 +7,6 @@ const Tenants: CollectionConfig = {
     { name: 'name', type: 'text', required: true },
   ],
   access: {
-    // Only admins can read their own tenant doc from the admin UI; API queries are usually internal
     read: ({ req }) => ({ id: { equals: req?.user?.tenant } }),
     create: ({ req }) => req.user?.role === 'admin',
     update: ({ req }) => ({ id: { equals: req?.user?.tenant } }),

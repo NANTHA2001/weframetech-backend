@@ -20,10 +20,9 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
   const promoted = bookingDoc._promoted === true;
   const finalType = promoted ? 'waitlist_promoted' : type;
 
-  // Make sure booking exists
   if (!bookingDoc.id) throw new Error('Booking must exist before creating notification');
 
-  // Ensure valid IDs for relationships
+
     const userField = typeof bookingDoc.user === 'object'
     ? bookingDoc.user.id
     : bookingDoc.user;
@@ -51,10 +50,6 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
     },
     overrideAccess: true,
     depth: 0,
-    // transactionID: req.transactionID 
   });
 }
 
-
-
-// const type = typeMap[bookingDoc.status] ?? 'waitlisted';

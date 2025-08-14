@@ -35,7 +35,7 @@ export async function writeBookingLog(
               ? 'cancel_confirmed'
               : 'create_request';
 
-  // Create booking log
+
   await req.payload.create({
     collection: 'booking-logs',
     data: {

@@ -131,8 +131,8 @@ src/
 
 | Role     | Email                    | Password  |
 | -------- | ------------------------ | --------- |
-| Admin    | [admin@example.com]      | Admin@123  | # use this
-| Reviewer | [reviewer@example.com]   | review123 |
+| Attendee | [admin@example.com]             | Admin@123  | # use this
+| Admin    | [nanthakumarg2001@gmail.com]      | GNanthu$2001 | # use this
 
 
 

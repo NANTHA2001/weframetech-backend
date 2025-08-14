@@ -16,7 +16,7 @@ const Notifications: CollectionConfig = {
   ],
   access: {
     read: ({ req }) => ({
-      and: [ tenantWhere(req), { user: { equals: req?.user?.id } } ] // users can only see own notifications
+      and: [ tenantWhere(req), { user: { equals: req?.user?.id } } ]
     }),
     create: ({ req }) => tenantWhere(req),
     update: ({ req }) => ({

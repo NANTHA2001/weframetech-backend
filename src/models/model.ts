@@ -4,7 +4,6 @@ export interface User {
     tenant: string;
   }
   
-  // src/types/payload.ts
   export interface Payload {
     findByID(args: { collection: string; id: string }): Promise<any>;
     find(args: { collection: string; limit?: number; where?: any; sort?: string }): Promise<any>;
