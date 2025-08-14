@@ -14,7 +14,6 @@ import Bookings from './collections/Bookings'
 import Notifications from './collections/Notifactions'
 import BookingLogs from './collections/Bookinglogs'
 import { promoteOldestWaitlisted } from './utils/promotion'
-import DashboardView from './admin/pages/dashboard'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -152,7 +151,7 @@ export default buildConfig({
             if (bookingUserId !== user.id) throw new Error('Cannot cancel others’ bookings')
           }
     
-          const wasConfirmed = booking.status === 'canceled'
+          const wasConfirmed = booking.status === 'confirmed'
     
           // Update booking status to canceled
           const canceled = await req.payload.update({
@@ -166,7 +165,6 @@ export default buildConfig({
     
           let promoted: any = null
           if (wasConfirmed) {
-            // Call your utility to promote oldest waitlisted booking
             promoted = await promoteOldestWaitlisted(req as unknown as PayloadRequest, booking.event)
           }
     
@@ -187,7 +185,7 @@ export default buildConfig({
         const user = req.user
         if (!user) throw new Error('Unauthorized')
   
-        // const data = await req.json(); // if body
+        const data = await req.json?.(); // if body
         const id = req.query.id as string; 
         const notif = await req.payload.findByID({ collection: 'notifications', id })
         if (!notif) throw new Error('Notification not found')
@@ -333,13 +331,12 @@ export default buildConfig({
     })
 
     if (!existingAdmins.totalDocs) {
-      // Replace 'yourTenantIdHere' with an actual tenant ID
       await payload.create({
         collection: 'users',
         data: {
           name: 'Super Admin',
           email: 'nanthakumarg2001@gmail.com',
-          password: 'GNanthu$2001', // Payload will hash this automatically
+          password: 'GNanthu$2001',
           role: 'admin',
           tenant: 1,
         },

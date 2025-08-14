@@ -1,37 +1,51 @@
-import { PayloadRequest } from "payload";
+import { PayloadRequest } from 'payload';
 
-// inside writeBookingLog.ts or wherever the function is
-type BookingAction = 
-  | 'create_request'
-  | 'auto_waitlist'
-  | 'auto_confirm'
-  | 'promote_from_waitlist'
-  | 'cancel_confirmed';
+const allowedActions = [
+  'create_request',
+  'waitlisted',
+  'confirmed',
+  'promote_from_waitlist',
+  'cancel_confirmed'
+] as const;
+
+type BookingAction = (typeof allowedActions)[number];
 
 export async function writeBookingLog(
   req: PayloadRequest,
-  bookingDoc: any,  
+  bookingDoc: any,
+  action?: BookingAction
 ) {
   const tenantField = bookingDoc.tenant?.id || bookingDoc.user?.tenant?.id;
   if (!tenantField) {
     throw new Error('Tenant is required to write booking log');
   }
-//   console.log("doc", bookingDoc)
+
+  // Determine final action
+  const finalAction: BookingAction = allowedActions.includes(bookingDoc.action)
+    ? bookingDoc.action
+    : action
+      ? action
+      : bookingDoc._promoted
+        ? 'promote_from_waitlist'
+        : bookingDoc.status === 'confirmed'
+          ? 'confirmed'
+          : bookingDoc.status === 'waitlisted'
+            ? 'waitlisted'
+            : bookingDoc.status === 'canceled'
+              ? 'cancel_confirmed'
+              : 'create_request';
+
+  // Create booking log
   await req.payload.create({
     collection: 'booking-logs',
     data: {
       event: bookingDoc.event?.id,
       note: bookingDoc.note,
-      tenant: bookingDoc.tenant?.id || bookingDoc.user?.tenant?.id,
+      tenant: tenantField,
       user: bookingDoc.user?.id,
-      action: bookingDoc.status,
-    //   booking: data.booking,
+      action: finalAction,
     },
+    overrideAccess: true,
+    depth: 0,
   });
 }
-
-// tenant: bookingDoc.tenant?.id || bookingDoc.user?.tenant?.id,
-// user: bookingDoc.user?.id,
-// type: finalType,
-// title: titleMap[finalType],
-// message: promoted
