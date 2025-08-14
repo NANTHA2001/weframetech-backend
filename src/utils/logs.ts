@@ -1,14 +1,6 @@
 import { PayloadRequest } from 'payload';
 
-const allowedActions = [
-  'create_request',
-  'waitlisted',
-  'confirmed',
-  'promote_from_waitlist',
-  'cancel_confirmed'
-] as const;
-
-type BookingAction = (typeof allowedActions)[number];
+import { BookingAction, ALLOWED_BOOKING_ACTIONS } from '../models/booking';
 
 export async function writeBookingLog(
   req: PayloadRequest,
@@ -20,7 +12,7 @@ export async function writeBookingLog(
     throw new Error('Tenant is required to write booking log');
   }
 
-  const finalAction: BookingAction = allowedActions.includes(bookingDoc.action)
+  const finalAction: BookingAction = ALLOWED_BOOKING_ACTIONS.includes(bookingDoc.action)
     ? bookingDoc.action
     : action
       ? action
@@ -44,7 +36,7 @@ export async function writeBookingLog(
       user: bookingDoc.user?.id,
       action: finalAction,
       booking: bookingDoc.id,
-    },
+    } as any,
     overrideAccess: true,
     depth: 0,
   });
