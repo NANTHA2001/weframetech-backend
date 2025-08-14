@@ -1,6 +1,18 @@
 import type { PayloadRequest } from 'payload';
 
-export async function createNotificationForStatus(req: PayloadRequest, bookingDoc: any) {
+
+const allowedActions = [
+    'create_request',
+    'waitlisted',
+    'confirmed',
+    'promote_from_waitlist',
+    'cancel_confirmed',
+    'waitlist_promoted'
+  ] as const;
+
+type BookingAction = (typeof allowedActions)[number];
+
+export async function createNotificationForStatus(req: PayloadRequest, bookingDoc: any, action?: BookingAction) {
   
     const typeMap: any = {
     confirmed: 'booking_confirmed',
@@ -18,6 +30,7 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
   };
 
   const promoted = bookingDoc._promoted === true;
+  console.log("bookingDoc._promoted", bookingDoc)
   const finalType = promoted ? 'waitlist_promoted' : type;
 
   if (!bookingDoc.id) throw new Error('Booking must exist before creating notification');
@@ -38,7 +51,8 @@ export async function createNotificationForStatus(req: PayloadRequest, bookingDo
         booking: bookingDoc.id, // <-- make sure you use doc.id directly
         tenant: bookingDoc.tenant?.id || bookingDoc.user?.tenant?.id,
         user: bookingDoc.user?.id,
-        type: finalType,
+        action: finalType,
+        type: action || finalType,
         title: titleMap[finalType],
         message: promoted
         ? 'A spot opened up and your booking is now confirmed.'

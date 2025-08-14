@@ -24,7 +24,7 @@ export async function writeBookingLog(
     ? bookingDoc.action
     : action
       ? action
-      : bookingDoc._promoted
+      : bookingDoc._promoted === true
         ? 'promote_from_waitlist'
         : bookingDoc.status === 'confirmed'
           ? 'confirmed'

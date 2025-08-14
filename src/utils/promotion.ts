@@ -32,10 +32,8 @@ export async function promoteOldestWaitlisted(req: PayloadRequest, eventId: stri
   });
 
 
-  await createNotificationForStatus(req, updated);
-
-
-  await writeBookingLog(req, updated);
+  await createNotificationForStatus(req, updated, 'waitlist_promoted');
+  await writeBookingLog(req, updated, 'promote_from_waitlist');
 
   return updated;
 }
