@@ -3,8 +3,6 @@ import { createNotificationForStatus } from './notifications';
 import { writeBookingLog } from './logs';
 
 export async function promoteOldestWaitlisted(req: PayloadRequest, eventId: string | any) {
-  console.log("event", eventId);
-
   const eventIdValue = typeof eventId === 'object' ? eventId.id : eventId;
 
   const tenantId = typeof req.user?.tenant === 'object' 
@@ -39,6 +37,5 @@ export async function promoteOldestWaitlisted(req: PayloadRequest, eventId: stri
 
   await writeBookingLog(req, updated);
 
-  console.log("promoteddd", updated);
   return updated;
 }
