@@ -59,24 +59,21 @@ export default buildConfig({
   
         const { eventId } = data
         if (!eventId) throw new Error('eventId is required')
-  
-        // Find the event
+
         const event = await req.payload.findByID({
           collection: 'events',
           id: eventId,
         })
         if (!event) throw new Error('Event not found')
   
-        // Tenant IDs
         const userTenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant
         const eventTenantId = typeof event.tenant === 'object' ? event.tenant.id : event.tenant
   
-        // Cross-tenant check (admins can bypass)
         if (user.role !== 'admin' && userTenantId !== eventTenantId) {
           throw new Error('Cross-tenant access forbidden')
         }
   
-        // Count confirmed bookings for this event & tenant
+
         const confirmed = await req.payload.find({
           collection: 'bookings',
           limit: 0,
@@ -89,11 +86,11 @@ export default buildConfig({
           },
         })
   
-        // Determine booking status based on capacity
+
         const capacity = event.capacity ?? 0
         const status = confirmed.totalDocs < capacity ? 'confirmed' : 'waitlisted'
   
-        // Create the booking
+        
         const booking = await req.payload.create({
           collection: 'bookings',
           data: {
@@ -107,7 +104,6 @@ export default buildConfig({
   
         const plainBooking = JSON.parse(JSON.stringify(booking));
 
-        // console.log("booked", plainBooking);
         return Response.json({
           message: plainBooking,
         })
@@ -126,7 +122,6 @@ export default buildConfig({
           const { bookingId } = data
           if (!bookingId) throw new Error('bookingId is required')
     
-          // Find the booking
           const booking = await req.payload.findByID({
             collection: 'bookings',
             id: bookingId,
@@ -134,16 +129,12 @@ export default buildConfig({
           if (!booking) throw new Error('Booking not found')
           if (booking.status == "canceled") throw new Error('Already canceled')
     
-          // Tenant guard
-          // const userTenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant
-          // const eventTenantId = typeof event.tenant === 'object' ? event.tenant.id : event.tenant
           const userTenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant
           const bookingTenantId = typeof booking.tenant === 'object' ? booking.tenant.id : booking.tenant
           if (user.role !== 'admin' && userTenantId !== bookingTenantId) {
             throw new Error('Cross-tenant access forbidden')
           }
     
-          // Attendee can only cancel their own booking
           if (user.role === 'attendee') {
             const bookingUserId = typeof booking.user === 'object' ? booking.user.id : booking.user
             if (bookingUserId !== user.id) throw new Error('Cannot cancel others’ bookings')
@@ -151,12 +142,10 @@ export default buildConfig({
     
           const wasConfirmed = booking.status === 'confirmed'
     
-          // Update booking status to canceled
           const canceled = await req.payload.update({
             collection: 'bookings',
             id: bookingId,
             user: user.id,
-            // tenant: userTenantId,
             data: { status: 'canceled' },
             depth: 1,
           })
@@ -183,7 +172,7 @@ export default buildConfig({
         const user = req.user
         if (!user) throw new Error('Unauthorized')
   
-        const data = await req.json?.(); // if body
+        const data = await req.json?.(); 
         const id = req.query.id as string; 
         const notif = await req.payload.findByID({ collection: 'notifications', id })
         if (!notif) throw new Error('Notification not found')
@@ -260,8 +249,7 @@ export default buildConfig({
     
         const tenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant;
         const nowISO = new Date().toISOString();
-    
-        // Upcoming events
+
         const events = await req.payload.find({
           collection: 'events',
           where: {
@@ -274,7 +262,6 @@ export default buildConfig({
           sort: 'date',
         });
     
-        // Count bookings per status
         const eventsWithCounts = await Promise.all(events.docs.map(async (ev: any) => {
           const [confirmed, waitlisted, canceled] = await Promise.all([
             req.payload.find({ collection: 'bookings', limit: 0, where: { and: [{ event: { equals: ev.id } }, { status: { equals: 'confirmed' } }, { tenant: { equals: tenantId } }] } }),
@@ -285,7 +272,6 @@ export default buildConfig({
           const confirmedCount = confirmed.totalDocs;
           const waitlistedCount = waitlisted.totalDocs;
           const canceledCount = canceled.totalDocs;
-          // const percentageFilled = ev.capacity > 0 ? Math.round((confirmedCount / ev.capacity) * 100) : 0;
           const percentageFilled = ev.capacity > 0 
           ? Math.min(Math.round((confirmedCount / ev.capacity) * 100), 100)
           : 0;
@@ -294,7 +280,6 @@ export default buildConfig({
           return { id: ev.id, title: ev.title, date: ev.date, capacity: ev.capacity, confirmedCount, waitlistedCount, canceledCount, percentageFilled };
         }));
     
-        // Summary analytics
         const [totalEvents, totalConfirmed, totalWaitlisted, totalCanceled] = await Promise.all([
           events.totalDocs,
           req.payload.find({ collection: 'bookings', limit: 0, where: { and: [{ tenant: { equals: tenantId } }, { status: { equals: 'confirmed' } }] } }).then(r => r.totalDocs),
@@ -302,7 +287,6 @@ export default buildConfig({
           req.payload.find({ collection: 'bookings', limit: 0, where: { and: [{ tenant: { equals: tenantId } }, { status: { equals: 'canceled' } }] } }).then(r => r.totalDocs),
         ]);
     
-        // Recent logs
         const recent = await req.payload.find({
           collection: 'booking-logs',
           where: { tenant: { equals: tenantId } },
